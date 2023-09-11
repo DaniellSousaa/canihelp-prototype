@@ -32,12 +32,15 @@ export default function Home() {
         console.error('Dados vazios ou formato inesperado');
         return;
       }
+      //const topThreeSuggestions = data.matches.slice(0, 3)
 
       setSuggestions(data.matches);
+      //console.log(suggestions)
     } catch (error) {
       console.error('Erro ao buscar sugestões:', error);
     }
   }, [ word]);
+
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -57,24 +60,28 @@ export default function Home() {
         placeholder="Digite uma frase para verificação gramatical"
       />
       <button onClick={fetchGrammarSuggestions}>Verificar Gramática</button>
-      {suggestions.length > 0 && (
-        <div>
-          <h2>Sugestões:</h2>
-          <ul>
-            {suggestions.map((suggestion, index) => (
-              <li key={index}>
-                <strong>{suggestion.message}</strong>
-                <ul>
-                  <strong>Sugestões</strong>
-                  {suggestion.replacements.map((replacement, index) => (
-                    <li key={index}>{replacement.value}</li>
-                  ))}
-                </ul>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+<div>
+  {suggestions.length > 0 && (
+    <div>
+      <h2>Sugestões:</h2>
+      <ul>
+        {suggestions.map((suggestion, index) => (
+          <li key={index}>
+            <strong>{suggestion.message}</strong>
+            <ul>
+              {suggestion.replacements.slice(0,3).map((replacement, index) => replacement.value).join(', ')}
+            </ul>
+          </li>
+        ))}
+      </ul>
+      <div>
+        <h2>Frase corrigida:</h2>
+        <p>{suggestions.map((suggestion) => suggestion.replacements[0]?.value).join(' ')}</p>
+      </div>
+    </div>
+  )}
+</div>
+
     </div>
   );
 }
