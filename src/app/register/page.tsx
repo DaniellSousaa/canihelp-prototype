@@ -33,7 +33,8 @@ async function fetchChatGptResponse(prompt: string): Promise<Choice[]> {
 const Register: React.FC = () => {
   const [userName, setUserName] = useState<string>(""); 
   const [mainService, setMainService] = useState<string>(""); 
-  const [otherServices, setOtherServices] = useState<string>(""); 
+  const [otherServices, setOtherServices] = useState<string>("");
+  const [otherServicesTags, setOtherServicesTags] = useState<string[]>([]);
 
   const [mainServiceResponse, setMainServiceResponse] = useState<Choice[]>([]);
   const [otherServicesResponse, setOtherServicesResponse] = useState<Choice[]>([]);
@@ -47,52 +48,68 @@ const Register: React.FC = () => {
     setIsLoading(true);
     try {
       const choices = await fetchChatGptResponse(mainService);
+      console.log("Choices from API:", choices);  // Debug log
       setMainServiceResponse(choices);
-      setMainService(''); // Limpa o campo após a submissão
+      console.log("Updated mainServiceResponse:", mainServiceResponse);  // Debug log
+      setMainService(''); 
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
     }
     setIsLoading(false);
   };
+  
 
   const handleOtherServicesSubmit = async () => {
     setIsLoading(true);
     try {
       const choices = await fetchChatGptResponse(otherServices);
       setOtherServicesResponse(choices);
-      setOtherServices(''); // Limpa o campo após a submissão
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
     }
     setIsLoading(false);
   };
 
+  const handleTagClick = (choice: Choice) => {
+    if (otherServicesTags.length < 5) {
+      setOtherServicesTags([...otherServicesTags, choice.message.content]);
+      setIsOtherServicesClicked(true);
+      setOtherServicesResponse(prevChoices => prevChoices.filter(item => item.index !== choice.index));
+      setOtherServices('');  
+    } else {
+      alert("Você só pode adicionar até 5 tags.");
+    }
+  };
+
   const handleSubmit = async () => {
     setIsFormSubmitted(true);
+    
     if (!isMainServiceClicked || !isOtherServicesClicked) {
       alert("Por favor, clique nas sugestões antes de prosseguir.");
       return;
+      
     }
 
-    setIsLoading(true);
-    const collectedData: any = { userName }; // Inicializa o objeto com o nome do usuário
+    const collectedData: any = {
+      userName,
+      otherServices: otherServicesTags
+    };
 
     try {
       const mainServiceChoices = await fetchChatGptResponse(mainService);
       setMainServiceResponse(mainServiceChoices);
       collectedData.mainService = mainServiceChoices.map(choice => choice.message.content);
 
-      const otherServicesChoices = await fetchChatGptResponse(otherServices);
-      setOtherServicesResponse(otherServicesChoices);
-      collectedData.otherServices = otherServicesChoices.map(choice => choice.message.content);
+      console.log("Dados coletados:", collectedData);
     } catch (error) {
-      console.error("Erro ao buscar resposta:", error);
+      
     }
-
-    console.log("Dados coletados:", collectedData); // Imprime os dados coletados no console
-    setIsLoading(false);
+  
+    //console.log("Debug mainServiceResponse:", mainServiceResponse); // Log de depuração 
   };
 
+
+    
   return (
     <main className={styles.main}>
       <div className={styles.card}>
@@ -137,22 +154,29 @@ const Register: React.FC = () => {
           placeholderText="Outros Serviços"
           showButton
         />
-         {!isFormSubmitted && otherServicesResponse.map((choice: Choice) => {
+
+        {!isFormSubmitted && otherServicesResponse.map((choice: Choice) => {
           return (
             <p
               className={styles.response}
               key={choice.index}
-              onClick={() => {
-                setOtherServices(choice.message.content);  // Atualize para setOtherServices
-                setIsOtherServicesClicked(true);
-                setOtherServicesResponse(prevChoices => prevChoices.filter(item => item.index !== choice.index));
-              }}
+              onClick={() => handleTagClick(choice)}
             >
               você quis dizer? <strong>{choice.message.content}</strong>
             </p>
           );
         })}
 
+        <div>
+          {otherServicesTags.map((tag, index) => (
+            <span key={index} className={styles.tag}>
+              {tag}
+              <button onClick={() => {
+                setOtherServicesTags(prevTags => prevTags.filter((_, i) => i !== index));
+              }}>x</button>
+            </span>
+          ))}
+        </div>
 
         <button 
           className={styles.submitButton} 

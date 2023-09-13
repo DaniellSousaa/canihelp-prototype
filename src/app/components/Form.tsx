@@ -7,21 +7,11 @@ interface PromptFormProps {
   setValue: (value: string) => void;
   value: string;
   placeholderText: string;
-  showButton?: boolean; // Nova propriedade
+  showButton?: boolean;
 }
 
 export function Form ({ onSubmit, isLoading, setValue, value, placeholderText, showButton }: PromptFormProps){
-  const [prompt, setPrompt] = useState<string>(value); // Inicializado com 'value'
-
-  /*const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (prompt === '') {
-      return;
-    }
-
-    onSubmit(); // Chamada sem argumentos
-    setPrompt(''); 
-  }; */
+  const [prompt, setPrompt] = useState<string>(value); 
 
   const handleClick = () => {
     if (prompt === '') {
@@ -37,9 +27,7 @@ export function Form ({ onSubmit, isLoading, setValue, value, placeholderText, s
     setValue(newPrompt); // Atualiza o valor no componente pai
   };
   
-  useEffect(() => {
-    setPrompt(value);
-  }, [value]);
+ 
 
   return (
     <form className={styles.Card}>
