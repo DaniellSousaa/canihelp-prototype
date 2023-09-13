@@ -36,6 +36,8 @@ const Home: React.FC = () => {
             const result = await response.json();
             setChatGptResponse(result.choices);
           }}
+          placeholderText="Digite algo com erro.."
+          showButton
         />
 
         {chatGptResponse.map((choice: Choice) => {

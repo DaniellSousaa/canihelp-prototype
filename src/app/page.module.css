@@ -1,5 +1,6 @@
 .main {
  margin-top: 5rem;
+ 
 }
 
 .card {
@@ -21,3 +22,20 @@
     padding: 1rem;
     margin-top: 10px;
 }
+
+.submitButton {
+    height: 3rem; 
+    padding: 1rem;
+    border: 0;
+    font-family: inherit;
+    background: #061420;
+    color: #fff;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .submitButton[disabled] {
+    opacity: 0.25;
+    color: gray;
+  }
