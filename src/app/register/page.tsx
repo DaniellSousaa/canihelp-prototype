@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import styles from "../page.module.css";
 import React, { useState } from "react";
@@ -31,33 +31,37 @@ async function fetchChatGptResponse(prompt: string): Promise<Choice[]> {
 }
 
 const Register: React.FC = () => {
-  const [userName, setUserName] = useState<string>(""); 
-  const [mainService, setMainService] = useState<string>(""); 
+  const [userName, setUserName] = useState<string>("");
+  const [mainService, setMainService] = useState<string>("");
   const [otherServices, setOtherServices] = useState<string>("");
   const [otherServicesTags, setOtherServicesTags] = useState<string[]>([]);
 
   const [mainServiceResponse, setMainServiceResponse] = useState<Choice[]>([]);
-  const [otherServicesResponse, setOtherServicesResponse] = useState<Choice[]>([]);
+  const [otherServicesResponse, setOtherServicesResponse] = useState<Choice[]>(
+    []
+  );
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState<boolean>(false);
-  const [isMainServiceClicked, setIsMainServiceClicked] = useState<boolean>(false);
-  const [isOtherServicesClicked, setIsOtherServicesClicked] = useState<boolean>(false);
+  const [isMainServiceClicked, setIsMainServiceClicked] =
+    useState<boolean>(false);
+  const [isOtherServicesClicked, setIsOtherServicesClicked] =
+    useState<boolean>(false);
 
   const handleMainServiceSubmit = async () => {
     setIsLoading(true);
     try {
       const choices = await fetchChatGptResponse(mainService);
-      console.log("Choices from API:", choices);  // Debug log
+      //console.log("Choices from API:", choices);
       setMainServiceResponse(choices);
-      console.log("Updated mainServiceResponse:", mainServiceResponse);  // Debug log
-      setMainService(''); 
+      //console.log("Updated mainServiceResponse:", mainServiceResponse);
+      setMainService("");
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
     }
     setIsLoading(false);
+
   };
-  
 
   const handleOtherServicesSubmit = async () => {
     setIsLoading(true);
@@ -74,8 +78,10 @@ const Register: React.FC = () => {
     if (otherServicesTags.length < 5) {
       setOtherServicesTags([...otherServicesTags, choice.message.content]);
       setIsOtherServicesClicked(true);
-      setOtherServicesResponse(prevChoices => prevChoices.filter(item => item.index !== choice.index));
-      setOtherServices('');  
+      setOtherServicesResponse((prevChoices) =>
+        prevChoices.filter((item) => item.index !== choice.index)
+      );
+      setOtherServices("");
     } else {
       alert("Você só pode adicionar até 5 tags.");
     }
@@ -83,33 +89,56 @@ const Register: React.FC = () => {
 
   const handleSubmit = async () => {
     setIsFormSubmitted(true);
-    
+
     if (!isMainServiceClicked || !isOtherServicesClicked) {
       alert("Por favor, clique nas sugestões antes de prosseguir.");
       return;
-      
     }
-
-    const collectedData: any = {
-      userName,
-      otherServices: otherServicesTags
-    };
 
     try {
+      const collectedData: any = {
+        userName,
+        otherServices: otherServicesTags,
+      };
+      
       const mainServiceChoices = await fetchChatGptResponse(mainService);
       setMainServiceResponse(mainServiceChoices);
-      collectedData.mainService = mainServiceChoices.map(choice => choice.message.content);
+      collectedData.mainService = mainServiceChoices.map(
+        (choice) => choice.message.content
+      );
 
-      console.log("Dados coletados:", collectedData);
-    } catch (error) {
-      
-    }
+      const response = await fetch("/api/save-user", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userName,
+          mainService,
+          otherServicesTags
+        }),
+      });
   
-    //console.log("Debug mainServiceResponse:", mainServiceResponse); // Log de depuração 
+      if (response.ok) {
+        alert('Dados cadastrados com sucesso!');
+      } else {
+        alert('Erro ao salvar os dados.');
+      }
+
+      console.log("Dados a serem enviados:", {
+        userName,
+        mainService,
+        otherServicesTags
+      });
+      
+
+    } catch (error) {
+      console.error("Erro ao salvar no MongoDB:", error);
+    }
+
+    //console.log("Debug mainServiceResponse:", mainServiceResponse); 
   };
 
-
-    
   return (
     <main className={styles.main}>
       <div className={styles.card}>
@@ -130,21 +159,24 @@ const Register: React.FC = () => {
           showButton
         />
 
-        {!isFormSubmitted && mainServiceResponse.map((choice: Choice) => {
-          return (
-            <p
-              className={styles.response}
-              key={choice.index}
-              onClick={() => {
-                setMainService(choice.message.content);  // Atualize para setMainService
-                setIsMainServiceClicked(true);
-                setMainServiceResponse(prevChoices => prevChoices.filter(item => item.index !== choice.index));
-              }}
-            >
-              você quis dizer? <strong>{choice.message.content}</strong>
-            </p>
-          );
-        })}
+        {!isFormSubmitted &&
+          mainServiceResponse.map((choice: Choice) => {
+            return (
+              <p
+                className={styles.response}
+                key={choice.index}
+                onClick={() => {
+                  setMainService(choice.message.content); 
+                  setIsMainServiceClicked(true);
+                  setMainServiceResponse((prevChoices) =>
+                    prevChoices.filter((item) => item.index !== choice.index)
+                  );
+                }}
+              >
+                você quis dizer? <strong>{choice.message.content}</strong>
+              </p>
+            );
+          })}
 
         <Form
           isLoading={isLoading}
@@ -155,35 +187,40 @@ const Register: React.FC = () => {
           showButton
         />
 
-        {!isFormSubmitted && otherServicesResponse.map((choice: Choice) => {
-          return (
-            <p
-              className={styles.response}
-              key={choice.index}
-              onClick={() => handleTagClick(choice)}
-            >
-              você quis dizer? <strong>{choice.message.content}</strong>
-            </p>
-          );
-        })}
+        {!isFormSubmitted &&
+          otherServicesResponse.map((choice: Choice) => {
+            return (
+              <p
+                className={styles.response}
+                key={choice.index}
+                onClick={() => handleTagClick(choice)}
+              >
+                você quis dizer? <strong>{choice.message.content}</strong>
+              </p>
+              
+            );
+          })}
 
         <div>
           {otherServicesTags.map((tag, index) => (
             <span key={index} className={styles.tag}>
               {tag}
-              <button onClick={() => {
-                setOtherServicesTags(prevTags => prevTags.filter((_, i) => i !== index));
-              }}>x</button>
+              <button
+                onClick={() => {
+                  setOtherServicesTags((prevTags) =>
+                    prevTags.filter((_, i) => i !== index)
+                  );
+                }}
+              >
+                x
+              </button>
             </span>
           ))}
         </div>
 
-        <button 
-          className={styles.submitButton} 
-          onClick={handleSubmit}
-        >
+        <button className={styles.submitButton} onClick={handleSubmit}>
           Cadastrar
-        </button> 
+        </button>
       </div>
     </main>
   );

@@ -1,8 +1,9 @@
-import { useState, ChangeEvent, useEffect } from 'react';
-import styles from './Form.module.css';
+import { useState, ChangeEvent, useEffect } from "react";
+import styles from "./Form.module.css";
+
 
 interface PromptFormProps {
-  onSubmit: () => void; // Alterado para não aceitar argumentos
+  onSubmit: () => void;
   isLoading: boolean;
   setValue: (value: string) => void;
   value: string;
@@ -10,31 +11,36 @@ interface PromptFormProps {
   showButton?: boolean;
 }
 
-export function Form ({ onSubmit, isLoading, setValue, value, placeholderText, showButton }: PromptFormProps){
-  const [prompt, setPrompt] = useState<string>(value); 
+export function Form({
+  onSubmit,
+  isLoading,
+  setValue,
+  value,
+  placeholderText,
+  showButton,
+}: PromptFormProps) {
+  const [prompt, setPrompt] = useState<string>(value);
 
   const handleClick = () => {
-    if (prompt === '') {
+    if (prompt === "") {
       return;
     }
     onSubmit();
-    setPrompt('');
+    setPrompt("");
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newPrompt = e.target.value;
     setPrompt(newPrompt);
-    setValue(newPrompt); // Atualiza o valor no componente pai
+    setValue(newPrompt);
   };
-  
- 
 
   return (
     <form className={styles.Card}>
       <input
         className={styles.input}
         type="text"
-        value={prompt} // Campo de entrada agora é controlado
+        value={prompt}
         onChange={handleChange}
         placeholder={value ? value : placeholderText}
       />
@@ -49,4 +55,4 @@ export function Form ({ onSubmit, isLoading, setValue, value, placeholderText, s
       )}
     </form>
   );
-};
+}
