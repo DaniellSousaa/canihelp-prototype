@@ -60,7 +60,6 @@ const Register: React.FC = () => {
       console.error("Erro ao buscar resposta:", error);
     }
     setIsLoading(false);
-
   };
 
   const handleOtherServicesSubmit = async () => {
@@ -100,11 +99,20 @@ const Register: React.FC = () => {
         userName,
         otherServices: otherServicesTags,
       };
-      
+
       const mainServiceChoices = await fetchChatGptResponse(mainService);
       setMainServiceResponse(mainServiceChoices);
       collectedData.mainService = mainServiceChoices.map(
         (choice) => choice.message.content
+      );
+
+      console.log(
+        "Body",
+        JSON.stringify({
+          userName,
+          mainService,
+          otherServicesTags,
+        })
       );
 
       const response = await fetch("/api/save-user", {
@@ -115,28 +123,26 @@ const Register: React.FC = () => {
         body: JSON.stringify({
           userName,
           mainService,
-          otherServicesTags
+          otherServicesTags,
         }),
       });
-  
+
       if (response.ok) {
-        alert('Dados cadastrados com sucesso!');
+        alert("Dados cadastrados com sucesso!");
       } else {
-        alert('Erro ao salvar os dados.');
+        alert("Erro ao salvar os dados.");
       }
 
       console.log("Dados a serem enviados:", {
         userName,
         mainService,
-        otherServicesTags
+        otherServicesTags,
       });
-      
-
     } catch (error) {
       console.error("Erro ao salvar no MongoDB:", error);
     }
 
-    //console.log("Debug mainServiceResponse:", mainServiceResponse); 
+    //console.log("Debug mainServiceResponse:", mainServiceResponse);
   };
 
   return (
@@ -166,7 +172,7 @@ const Register: React.FC = () => {
                 className={styles.response}
                 key={choice.index}
                 onClick={() => {
-                  setMainService(choice.message.content); 
+                  setMainService(choice.message.content);
                   setIsMainServiceClicked(true);
                   setMainServiceResponse((prevChoices) =>
                     prevChoices.filter((item) => item.index !== choice.index)
@@ -197,7 +203,6 @@ const Register: React.FC = () => {
               >
                 você quis dizer? <strong>{choice.message.content}</strong>
               </p>
-              
             );
           })}
 
