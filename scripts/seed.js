@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
 
 
-const uri = "mongodb+srv://canihelp:2Soi9MvhQLEHmYrq@cluster0.3uqqr.mongodb.net/canihelp"
+const uri = ""
 const options = {};
 
 async function seedDatabase() {
