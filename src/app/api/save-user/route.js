@@ -23,12 +23,10 @@ export async function POST(req, res) {
       otherServices,
     });
 
-    res.status(201).json({ message: "Dados cadastrados com sucesso!" });
+    return NextResponse.json({ message: "Dados cadastrados com sucesso!" }, { status: 201 });
   } catch (error) {
     // Imprimir qualquer erro do MongoDB
     console.error("MongoDB Error:", error);
-    res
-      .status(500)
-      .json({ message: "Erro ao salvar no MongoDB", error: error.message });
+    return NextResponse.json({ message: "Erro ao salvar no MongoDB", error: error.message }, { status: 500 });
   }
 }

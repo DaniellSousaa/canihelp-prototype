@@ -102,29 +102,19 @@ const Register: React.FC = () => {
 
       const mainServiceChoices = await fetchChatGptResponse(mainService);
       setMainServiceResponse(mainServiceChoices);
-      collectedData.mainService = mainServiceChoices.map(
-        (choice) => choice.message.content
-      );
+      collectedData.mainService = mainServiceChoices[0]?.message.content || '';
 
-      console.log(
+      /*console.log(
         "Body",
-        JSON.stringify({
-          userName,
-          mainService,
-          otherServicesTags,
-        })
-      );
+        JSON.stringify(collectedData)
+      );*/
 
       const response = await fetch("/api/save-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          userName,
-          mainService,
-          otherServicesTags,
-        }),
+        body: JSON.stringify(collectedData),
       });
 
       if (response.ok) {
@@ -133,16 +123,15 @@ const Register: React.FC = () => {
         alert("Erro ao salvar os dados.");
       }
 
-      console.log("Dados a serem enviados:", {
+      /*console.log("Dados a serem enviados:", {
         userName,
         mainService,
         otherServicesTags,
-      });
+      });*/
     } catch (error) {
       console.error("Erro ao salvar no MongoDB:", error);
     }
 
-    //console.log("Debug mainServiceResponse:", mainServiceResponse);
   };
 
   return (
