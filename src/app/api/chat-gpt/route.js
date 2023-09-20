@@ -8,12 +8,15 @@ export async function POST(request) {
 
   const params = await request.json();
 
+  console.log("Params", params);
+
   const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: [
       {
         role: "system",
-        content: "You are a helpful assistant specialized in correcting sentences in Brazilian Portuguese. If the user provides a sentence with errors, please correct it."
+        content:
+          "You are a helpful assistant specialized in bringing suggestions in Brazilian Portuguese. Return a list with name of professions or services based on what the user entered in Brazilian Portuguese.",
       },
       {
         role: "user",
