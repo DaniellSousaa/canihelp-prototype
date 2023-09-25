@@ -30,19 +30,14 @@ export async function GET(req, res) {
             index: "users_search",
             text: {
               query: term,
-              path: {
-                wildcard: "*",
-              },
+              path: ["mainService", "otherServices"],
             },
           },
         },
       ])
       .toArray();
 
-    return NextResponse.json(
-      { data: users },
-      { status: 201 }
-    );
+    return NextResponse.json({ data: users }, { status: 201 });
   } catch (error) {
     console.error("Search Error:", error);
     return NextResponse.json(

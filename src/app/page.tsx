@@ -14,37 +14,29 @@ interface IUser {
 
 const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [categories, setCategories] = useState<string[]>([]);
   const [search, setSearch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<IUser[]>([]);
 
-  const onSubmit = async (prompt: string) => {
+  const onSubmit = async (term: string) => {
     setIsLoading(true);
-    setCategories([]);
     setError(null);
-    setSearch(null);
-    setUsers([]);
 
     try {
-      const list = await getChatGptList(prompt);
+      setSearch(term);
 
-      setCategories(list);
+      const response = await fetch(`/api/users?term=${term}`, {
+        method: "GET",
+      });
+
+      const res = await response.json();
+
+      setUsers(res.data);
     } catch (err: any) {
       setError(err?.message || "Ocorreu um erro");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getUsers = async (term: string) => {
-    setSearch(term);
-
-    const response = await fetch(`/api/users?term=${term}`, { method: "GET" });
-
-    const res = await response.json();
-
-    setUsers(res.data);
   };
 
   return (
@@ -63,7 +55,7 @@ const Home: React.FC = () => {
           showButton
         />
 
-        {search ? (
+        {!!search && (
           <div>
             <h3 className={styles.results}>
               Resultados para: <i>{search}</i>
@@ -83,18 +75,6 @@ const Home: React.FC = () => {
               ))}
             </ul>
           </div>
-        ) : (
-          <ul className={styles.list}>
-            {categories.map((c, i) => (
-              <li
-                onClick={() => getUsers(c)}
-                className={styles.listItem}
-                key={i}
-              >
-                {c}
-              </li>
-            ))}
-          </ul>
         )}
 
         {!!error && (
