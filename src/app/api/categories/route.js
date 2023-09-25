@@ -17,7 +17,8 @@ export async function GET(req, res) {
       .collection("categories")
       .find()
       .toArray();
-    return NextResponse.json({ data: collection }, { status: 201 });
+      const names = collection.map(item => item.Name);
+    return NextResponse.json({ data: names }, { status: 201 });
   } catch (error) {
     return NextResponse.json(
       { message: "Erro ao buscar gaterorias", error: error.message },

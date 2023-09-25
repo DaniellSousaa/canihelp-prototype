@@ -5,6 +5,8 @@ import React, { useState } from "react";
 import styles from "../page.module.css";
 import { Form } from "../components/Form";
 import { getChatGptList } from "@/utils/api";
+import Carousel from "../components/Carousel";
+import Checkbox from "../components/Checkbox";
 
 const Register: React.FC = () => {
   const [userName, setUserName] = useState<string>("");
@@ -21,37 +23,29 @@ const Register: React.FC = () => {
     setIsLoading(true);
     try {
       const list = await getChatGptList(prompt);
-
       setMainServiceList(list);
-      setMainService("");
+      setMainService(""); 
+      setOtherServicesList(list.filter(item => item !== mainService));
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
     }
     setIsLoading(false);
   };
 
-  const handleOtherServicesSubmit = async (prompt: string) => {
-    setIsLoading(true);
-    try {
-      const list = await getChatGptList(prompt);
-
-      setOtherServicesList(list);
-    } catch (error) {
-      console.error("Erro ao buscar resposta:", error);
-    }
-    setIsLoading(false);
-  };
-
-  const handleTagClick = (category: string) => {
-    if (otherServicesTags.length < 5) {
-      setOtherServicesTags([...otherServicesTags, category]);
-      setOtherServicesList((prevChoices) =>
-        prevChoices.filter((item) => item !== category)
-      );
+  const handleCheckboxChange = (category:any, isChecked:any) => {
+    if (isChecked) {
+      if (otherServicesTags.length < 5) {
+        setOtherServicesTags([...otherServicesTags, category]);
+      } else {
+        alert("Você só pode adicionar até 5 categorias.");
+      }
     } else {
-      alert("Você só pode adicionar até 5 tags.");
+      setOtherServicesTags((prevTags) =>
+        prevTags.filter((tag) => tag !== category)
+      );
     }
   };
+  
 
   const handleSubmit = async () => {
     setIsFormSubmitted(true);
@@ -101,83 +95,55 @@ const Register: React.FC = () => {
 
       <h2 className={styles.title}>Cadastro</h2>
       <div className={styles.card}>
-        <Form
-          isLoading={false}
-          setValue={setUserName}
-          value={userName}
-          onSubmit={() => {}}
-          placeholderText="Seu nome"
-        />
+        <Carousel handleSubmit={handleSubmit}>
+          <div>
+            <Form
+              isLoading={false}
+              setValue={setUserName}
+              value={userName}
+              onSubmit={() => {}}
+              placeholderText="Seu nome"
+            />
+          </div>
 
-        <Form
-          isLoading={isLoading}
-          value={mainService}
-          disabled={!!mainService}
-          onSubmit={handleMainServiceSubmit}
-          placeholderText="Serviço Principal"
-          showButton
-        />
+          <div>
+            <Form
+              isLoading={isLoading}
+              value={mainService}
+              disabled={!!mainService}
+              onSubmit={handleMainServiceSubmit}
+              placeholderText="Serviço Principal"
+              showButton
+            />
+            <ul className={styles.list}>
+              {!isFormSubmitted &&
+                mainServiceList.map((c, i) => (
+                  <li
+                    className={styles.listItem}
+                    key={i}
+                    onClick={() => {
+                      setMainService(c);
+                      setMainServiceList([]);
+                    }}
+                  >
+                    {c}
+                  </li>
+                ))}
+            </ul>
+          </div>
 
-        <ul className={styles.list}>
-          {!isFormSubmitted &&
-            mainServiceList.map((c, i) => {
-              return (
-                <li
-                  className={styles.listItem}
-                  key={i}
-                  onClick={() => {
-                    setMainService(c);
-                    setMainServiceList([]);
-                  }}
-                >
-                  {c}
-                </li>
-              );
-            })}
-        </ul>
-
-        <Form
-          isLoading={isLoading}
-          onSubmit={handleOtherServicesSubmit}
-          placeholderText="Outros Serviços"
-          showButton
-        />
-
-        <div>
-          {otherServicesTags.map((tag, index) => (
-            <span key={index} className={styles.tag}>
-              {tag}
-              <button
-                onClick={() => {
-                  setOtherServicesTags((prevTags) =>
-                    prevTags.filter((_, i) => i !== index)
-                  );
-                }}
-              >
-                x
-              </button>
-            </span>
-          ))}
-        </div>
-
-        <ul className={styles.list}>
-          {!isFormSubmitted &&
-            otherServicesList.map((c, i) => {
-              return (
-                <li
-                  className={styles.listItem}
-                  key={i}
-                  onClick={() => handleTagClick(c)}
-                >
-                  {c}
-                </li>
-              );
-            })}
-        </ul>
-
-        <button className={styles.submitButton} onClick={handleSubmit}>
-          Cadastrar
-        </button>
+          <ul className={styles.list}>
+            {otherServicesList.map((category, i) => (
+              <li key={i} className={styles.listItem}>
+                <Checkbox
+                  label={category}
+                  checked={otherServicesTags.includes(category)}
+                  onChange={(isChecked) => handleCheckboxChange(category, isChecked)}
+                />
+              </li>
+            ))}
+          </ul>
+        </Carousel>
       </div>
     </main>
   );
