@@ -21,3 +21,8 @@
   cursor: pointer;
   text-align: center;
 }
+
+.buttonDisabled {
+  cursor: not-allowed;
+  opacity: 0.5; 
+}

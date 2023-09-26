@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './Carousel.module.css'; 
 import styless from '../page.module.css'
 
 interface CarouselProps {
   children: React.ReactNode[];
   handleSubmit: () => void;
+  isDisabled?: boolean;
+  onSlideChange?: (slide: number) => void; 
 }
 
-
-const Carousel: React.FC<CarouselProps> = ({ handleSubmit,children }) => {
+const Carousel: React.FC<CarouselProps> = ({ handleSubmit, isDisabled, onSlideChange,children }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const nextSlide = () => {
@@ -19,6 +20,13 @@ const Carousel: React.FC<CarouselProps> = ({ handleSubmit,children }) => {
     setCurrentSlide((prevSlide) => (prevSlide - 1 + children.length) % children.length);
   };
 
+  useEffect(() => {
+    if (onSlideChange) {
+      onSlideChange(currentSlide);
+    }
+  }, [currentSlide]);
+  
+
   return (
     <div>
       {React.Children.map(children, (child, index) => (
@@ -27,14 +35,18 @@ const Carousel: React.FC<CarouselProps> = ({ handleSubmit,children }) => {
         </div>
       ))}
 
-      {/* Se estiver na primeira página, não mostrar o botão "Anterior" */}
       {currentSlide !== 0 && <button onClick={prevSlide} className={styles.button}>Anterior</button>}
 
-      {/* Se estiver na última página, mostrar o botão "Cadastrar", caso contrário, mostrar "Próximo" */}
       {currentSlide === children.length - 1 ? (
         <button className={styless.submitButton} onClick={handleSubmit}>Cadastrar</button>
       ) : (
-        <button onClick={nextSlide} className={styles.button}>Próximo</button>
+        <button 
+          onClick={nextSlide} 
+          className={`${styles.button} ${isDisabled ? styles.buttonDisabled : ''}`} 
+          disabled={isDisabled}
+        >
+            Próximo
+        </button>
       )}
     </div>
   );

@@ -18,20 +18,28 @@ const Register: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState<boolean>(false);
+  const [activeSlide, setActiveSlide] = useState(0);
+
 
   const handleMainServiceSubmit = async (prompt: string) => {
     setIsLoading(true);
     try {
       const list = await getChatGptList(prompt);
+      
       setMainServiceList(list);
-      setMainService(""); 
-      setOtherServicesList(list.filter(item => item !== mainService));
+      //setMainService(""); 
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
     }
     setIsLoading(false);
   };
 
+  const handleOptionClick = (selectedOption: string) => {
+    setMainService(selectedOption);
+    const filteredList:any = mainServiceList.filter(item => item !== selectedOption);
+    setOtherServicesList(filteredList);
+  };
+  
   const handleCheckboxChange = (category:any, isChecked:any) => {
     if (isChecked) {
       if (otherServicesTags.length < 5) {
@@ -86,6 +94,15 @@ const Register: React.FC = () => {
     }
   };
 
+  let isNextButtonDisabled = false;
+  if (activeSlide === 0) {
+    isNextButtonDisabled = !userName;
+  } else if (activeSlide === 1) {
+    isNextButtonDisabled = !mainService;
+  }
+
+  
+
   return (
     <main className={styles.main}>
       <nav className={styles.menu}>
@@ -95,7 +112,11 @@ const Register: React.FC = () => {
 
       <h2 className={styles.title}>Cadastro</h2>
       <div className={styles.card}>
-        <Carousel handleSubmit={handleSubmit}>
+      <Carousel 
+        handleSubmit={handleSubmit} 
+        isDisabled={isNextButtonDisabled} 
+        onSlideChange={setActiveSlide}
+      >
           <div>
             <Form
               isLoading={false}
@@ -122,8 +143,7 @@ const Register: React.FC = () => {
                     className={styles.listItem}
                     key={i}
                     onClick={() => {
-                      setMainService(c);
-                      setMainServiceList([]);
+                      handleOptionClick(c);
                     }}
                   >
                     {c}
