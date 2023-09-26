@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import styles from "./page.module.css";
 import { Form } from "./components/Form";
 import { getChatGptList } from "@/utils/api";
+import { searchMatchCategories } from "@/utils/search";
 
 interface IUser {
   userName: string;
@@ -17,6 +18,10 @@ const Home: React.FC = () => {
   const [search, setSearch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<IUser[]>([]);
+
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
 
   const onSubmit = async (term: string) => {
     setIsLoading(true);
@@ -39,6 +44,47 @@ const Home: React.FC = () => {
     }
   };
 
+
+  //teste
+  async function fetchAllCategories() {
+    try {
+      const response = await fetch('/api/categories', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Erro na resposta da API');
+      }
+
+      const data = await response.json();
+      setCategories(data.data); 
+      setLoading(false);
+    } catch (error) {
+      console.error('Erro ao buscar categorias:', error);
+      setError(error);
+      setLoading(false);
+    }
+  }
+
+  async function getFilteredCategories(searchTerm) {
+    return searchMatchCategories(searchTerm, categories).slice(0, 5); 
+  }
+
+  useEffect(() => {
+    fetchAllCategories();
+  }, []);
+  
+  useEffect(() => {
+    getFilteredCategories("porteiro").then(filteredResults => {
+      console.log(filteredResults);
+    });
+  }, [categories]); 
+  
+  
+
   return (
     <main className={styles.main}>
       <nav className={styles.menu}>
@@ -54,6 +100,7 @@ const Home: React.FC = () => {
           placeholderText="Qual serviço você deseja pesquisar?"
           showButton
         />
+
 
         {!!search && (
           <div>
