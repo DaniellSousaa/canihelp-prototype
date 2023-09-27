@@ -23,24 +23,24 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
 
-  const onSubmit = async (term: string) => {
+  const onSubmit = async (term: string, isCategoryClick?: boolean) => {
     setIsLoading(true);
     setError(null);
 
-    const results = searchMatchCategories(term, categories);
-
     let searchTerm;
 
-    // Verifica se algum resultado tem a propriedade Equal como true
-    const exactMatch = results.find(result => result.Equal);
-
-    if (exactMatch) {
-        searchTerm = exactMatch.Name;
-    } else if (results.length > 0) {
-        // Se o usuário não clicou em uma categoria filtrada, mas há categorias filtradas
-        searchTerm = results.slice(0,3).map(r => r.Name).join(" ");
-    } else {
+    if (isCategoryClick) {
         searchTerm = term;
+    } else {
+        const results = searchMatchCategories(term, categories);
+        const exactMatch = results.find(result => result.Equal);
+        if (exactMatch) {
+            searchTerm = exactMatch.Name;
+        } else if (results.length > 0) {
+            searchTerm = results.slice(0,3).map(r => r.Name).join(" ");
+        } else {
+            searchTerm = term;
+        }
     }
 
     setSearch(searchTerm);
@@ -52,15 +52,22 @@ const Home: React.FC = () => {
         });
 
         const res = await response.json();
-        setUsers(res.data);
+        const searchTermArray = searchTerm.split(" "); 
+
+        const filteredUsers = res.data.filter((user: IUser) => {
+            return searchTermArray.some(searchTermItem => 
+                user.mainService.toLowerCase().includes(searchTermItem.toLowerCase()) ||
+                user.otherServices.some(service => service.toLowerCase().includes(searchTermItem.toLowerCase()))
+            );
+        });
+
+        setUsers(filteredUsers);
     } catch (err: any) {
         setError(err?.message || "Ocorreu um erro");
     } finally {
         setIsLoading(false);
     } 
   };
-
-
 
   async function fetchAllCategories() {
     try {
@@ -97,18 +104,19 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleCategoryClick = (category: string) => {
+ const handleCategoryClick = (category: string) => {
     console.log("handleCategoryClick called with category:", category);
     setSearch(category);
     setFilteredCategories([]);
-    onSubmit(category); 
+    onSubmit(category, true);
   };
+
 
   useEffect(() => {
     fetchAllCategories();
   }, []);
 
-  const categoriesString = categories.join(' ');
+  //const categoriesString = categories.join(' ');
 
 
   return (
@@ -154,9 +162,11 @@ const Home: React.FC = () => {
                   <p className={styles.name}>{u.userName}</p>
                   <p className={styles.category}>{u.mainService}</p>
                   <div className={styles.categoryTags}>
-                    {u.otherServices.map((s, j) => (
-                      <p key={j}>{s}</p>
-                    ))}
+                    {u.otherServices
+                      .filter(service => service.toLowerCase().includes(search?.toLowerCase() || ''))
+                      .map((s, j) => (
+                        <p key={j}>{s}</p>
+                      ))}
                   </div>
                 </li>
               ))}
