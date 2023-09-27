@@ -20,6 +20,7 @@ const Home: React.FC = () => {
   const [users, setUsers] = useState<IUser[]>([]);
 
   const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
 
@@ -45,7 +46,6 @@ const Home: React.FC = () => {
   };
 
 
-  //teste
   async function fetchAllCategories() {
     try {
       const response = await fetch('/api/categories', {
@@ -69,21 +69,22 @@ const Home: React.FC = () => {
     }
   }
 
-  async function getFilteredCategories(searchTerm) {
-    return searchMatchCategories(searchTerm, categories).slice(0, 5); 
-  }
+  const handleFilterCategories = (term: string) => {
+    if (term.length >= 2) {
+        const results = searchMatchCategories(term, categories);
+        const categoryNames = results.map(result => result.Name).slice(0,5); 
+        setFilteredCategories(categoryNames);
+    } else {
+        setFilteredCategories([]);
+    }
+  };
+
+
 
   useEffect(() => {
     fetchAllCategories();
   }, []);
-  
-  useEffect(() => {
-    getFilteredCategories("porteiro").then(filteredResults => {
-      console.log(filteredResults);
-    });
-  }, [categories]); 
-  
-  
+    
 
   return (
     <main className={styles.main}>
@@ -97,10 +98,27 @@ const Home: React.FC = () => {
         <Form
           isLoading={isLoading}
           onSubmit={onSubmit}
+          onChange={handleFilterCategories}
           placeholderText="Qual serviço você deseja pesquisar?"
           showButton
         />
 
+
+        <ul className={styles.list}>
+            {filteredCategories.map((category, i) => (
+                <li
+                    className={styles.listItem}
+                    key={i}
+                    onClick={() => {
+                        setSearch(category);
+                        setFilteredCategories([]);
+                        onSubmit(category); 
+                    }}
+                >
+                    {category}
+                </li>
+            ))}
+        </ul>
 
         {!!search && (
           <div>
