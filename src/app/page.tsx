@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 
 import styles from "./page.module.css";
 import { Form } from "./components/Form";
-import { getChatGptList } from "@/utils/api";
 import { searchMatchCategories } from "@/utils/search";
 
 interface IUser {
@@ -27,23 +26,22 @@ const Home: React.FC = () => {
   const onSubmit = async (term: string) => {
     setIsLoading(true);
     setError(null);
+    setSearch(term);
 
     try {
-      setSearch(term);
+        const response = await fetch(`/api/users?term=${term}`, {
+            method: "GET",
+        });
 
-      const response = await fetch(`/api/users?term=${term}`, {
-        method: "GET",
-      });
-
-      const res = await response.json();
-
-      setUsers(res.data);
+        const res = await response.json();
+        setUsers(res.data);
     } catch (err: any) {
-      setError(err?.message || "Ocorreu um erro");
+        setError(err?.message || "Ocorreu um erro");
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
   };
+
 
 
   async function fetchAllCategories() {
@@ -72,14 +70,20 @@ const Home: React.FC = () => {
   const handleFilterCategories = (term: string) => {
     if (term.length >= 2) {
         const results = searchMatchCategories(term, categories);
-        const categoryNames = results.map(result => result.Name).slice(0,5); 
+        const categoryNames = results.map(result => result.Name).slice(0, 5);
         setFilteredCategories(categoryNames);
     } else {
         setFilteredCategories([]);
+        setUsers([]);
+        setSearch(null)
     }
   };
 
-
+  const handleCategoryClick = (category: string) => {
+    setSearch(category);
+    setFilteredCategories([]);
+    onSubmit(category); 
+  };
 
   useEffect(() => {
     fetchAllCategories();
@@ -95,13 +99,15 @@ const Home: React.FC = () => {
 
       <h2 className={styles.title}>Início</h2>
       <div className={styles.card}>
-        <Form
-          isLoading={isLoading}
-          onSubmit={onSubmit}
-          onChange={handleFilterCategories}
-          placeholderText="Qual serviço você deseja pesquisar?"
-          showButton
-        />
+      <Form
+        isLoading={isLoading}
+        value={search}
+        onSubmit={() => onSubmit(search)} 
+        placeholderText="Qual serviço você deseja pesquisar?"
+        showButton
+        onChange={handleFilterCategories}
+      />
+
 
 
         <ul className={styles.list}>
@@ -109,16 +115,13 @@ const Home: React.FC = () => {
                 <li
                     className={styles.listItem}
                     key={i}
-                    onClick={() => {
-                        setSearch(category);
-                        setFilteredCategories([]);
-                        onSubmit(category); 
-                    }}
+                    onClick={() => handleCategoryClick(category)}
                 >
                     {category}
                 </li>
             ))}
         </ul>
+
 
         {!!search && (
           <div>
@@ -140,7 +143,8 @@ const Home: React.FC = () => {
               ))}
             </ul>
           </div>
-        )}
+      )}
+
 
         {!!error && (
           <p className={styles.response}>
