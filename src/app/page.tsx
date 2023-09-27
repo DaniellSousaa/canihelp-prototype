@@ -26,10 +26,28 @@ const Home: React.FC = () => {
   const onSubmit = async (term: string) => {
     setIsLoading(true);
     setError(null);
-    setSearch(term);
+
+    const results = searchMatchCategories(term, categories);
+
+    let searchTerm;
+
+    // Verifica se algum resultado tem a propriedade Equal como true
+    const exactMatch = results.find(result => result.Equal);
+
+    if (exactMatch) {
+        searchTerm = exactMatch.Name;
+    } else if (results.length > 0) {
+        // Se o usuário não clicou em uma categoria filtrada, mas há categorias filtradas
+        searchTerm = results.slice(0,3).map(r => r.Name).join(" ");
+    } else {
+        searchTerm = term;
+    }
+
+    setSearch(searchTerm);
+    setFilteredCategories([]);
 
     try {
-        const response = await fetch(`/api/users?term=${term}`, {
+        const response = await fetch(`/api/users?term=${searchTerm}`, {
             method: "GET",
         });
 
@@ -39,7 +57,7 @@ const Home: React.FC = () => {
         setError(err?.message || "Ocorreu um erro");
     } finally {
         setIsLoading(false);
-    }
+    } 
   };
 
 
@@ -80,6 +98,7 @@ const Home: React.FC = () => {
   };
 
   const handleCategoryClick = (category: string) => {
+    console.log("handleCategoryClick called with category:", category);
     setSearch(category);
     setFilteredCategories([]);
     onSubmit(category); 
@@ -88,7 +107,9 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchAllCategories();
   }, []);
-    
+
+  const categoriesString = categories.join(' ');
+
 
   return (
     <main className={styles.main}>
@@ -102,13 +123,11 @@ const Home: React.FC = () => {
       <Form
         isLoading={isLoading}
         value={search}
-        onSubmit={() => onSubmit(search)} 
+        onSubmit={onSubmit}
         placeholderText="Qual serviço você deseja pesquisar?"
         showButton
         onChange={handleFilterCategories}
       />
-
-
 
         <ul className={styles.list}>
             {filteredCategories.map((category, i) => (
