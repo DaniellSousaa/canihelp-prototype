@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 
 import styles from "./page.module.css";
 import { Form } from "./components/Form";
-import { searchMatchCategories } from "@/utils/search";
+import { replaceSpecialChars, searchMatchCategories } from "@/utils/search";
 
 interface IUser {
   userName: string;
@@ -43,8 +43,13 @@ const Home: React.FC = () => {
         }
     }
 
+   
     setSearch(searchTerm);
     setFilteredCategories([]);
+
+    searchTerm = replaceSpecialChars(searchTerm);
+
+    searchTerm = searchTerm.split(" ").join(",");
 
     try {
         const response = await fetch(`/api/users?term=${searchTerm}`, {

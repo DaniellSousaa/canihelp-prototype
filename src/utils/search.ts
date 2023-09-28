@@ -1,4 +1,4 @@
-const replaceSpecialChars = (value: string) => {
+export const replaceSpecialChars = (value: string) => {
   if (!value) return value;
 
   let str = value?.toString();
