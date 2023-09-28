@@ -8,7 +8,9 @@ export async function GET(req, res) {
     return res.status(405).json({ message: "Método não permitido" });
   }
 
-  const term = req.url.split("users?")[1].split("=")[1];
+  //Teste
+  const termFromURL = req.url.split("users?")[1].split("=")[1];
+  const term = termFromURL.replace(/,/g, ' ').toLowerCase();
 
   console.log(term);
 

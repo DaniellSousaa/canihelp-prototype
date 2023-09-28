@@ -3,6 +3,7 @@ import styles from "./Form.module.css";
 
 interface PromptFormProps {
   onSubmit: (prompt: string) => void;
+  onChange?: (value: string) => void; 
   isLoading: boolean;
   setValue?: (value: string) => void;
   value?: string;
@@ -13,6 +14,7 @@ interface PromptFormProps {
 
 export function Form({
   onSubmit,
+  onChange,  
   isLoading,
   setValue,
   value,
@@ -33,6 +35,7 @@ export function Form({
     const newPrompt = e.target.value;
     setPrompt(newPrompt);
     setValue && setValue(newPrompt);
+    onChange && onChange(newPrompt);  // Chama a função passada através da prop onChange
   };
 
   useEffect(() => {
