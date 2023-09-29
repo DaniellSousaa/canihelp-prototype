@@ -15,8 +15,7 @@ export async function POST(req, res) {
   const { userName, mainService, otherServices } = await req.json();
 
   try {
-    await db.collection("categories").createIndex({ Name: 1 }, { unique: true });
-
+    
     const allServices = [mainService, ...otherServices];
     console.log('Todas as caterogiras =>', allServices)
 
