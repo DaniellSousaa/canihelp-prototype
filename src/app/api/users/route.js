@@ -10,9 +10,13 @@ export async function GET(req, res) {
 
   //Teste
   const termFromURL = req.url.split("users?")[1].split("=")[1];
-  const term = termFromURL.replace(/,/g, ' ').toLowerCase();
 
-  console.log(term);
+  console.log(termFromURL)
+
+  const term = termFromURL.split(',').map(term => term.replace(/-/g, ' '));
+  
+  console.log(term)
+  
 
   if (!term) {
     throw { message: "Termo obrigatório" };

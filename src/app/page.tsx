@@ -15,6 +15,7 @@ interface IUser {
 const Home: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [search, setSearch] = useState<string | null>(null);
+  const [displaySearch, setDisplaySearch] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<IUser[]>([]);
 
@@ -26,6 +27,7 @@ const Home: React.FC = () => {
   const onSubmit = async (term: string, isCategoryClick?: boolean) => {
     setIsLoading(true);
     setError(null);
+    setDisplaySearch(term);
 
     let searchTerm;
 
@@ -46,18 +48,28 @@ const Home: React.FC = () => {
    
     setSearch(searchTerm);
     setFilteredCategories([]);
+    setDisplaySearch(null);
 
     searchTerm = replaceSpecialChars(searchTerm);
 
-    searchTerm = searchTerm.split(" ").join(",");
-
+    searchTerm = searchTerm.split(' ').reduce((acc, word, index) => {
+      if (word.charAt(0).toUpperCase() === word.charAt(0) && index !== 0) {
+          acc.push(word);
+      } else if (index === 0) {  
+          acc.push(word);
+      } else {
+          acc[acc.length - 1] = acc[acc.length - 1] + '-' + word;
+      }
+      return acc;
+    }, []).join(',').replace(/^,|,$/g, '');;
+    
     try {
         const response = await fetch(`/api/users?term=${searchTerm}`, {
             method: "GET",
         });
 
         const res = await response.json();
-        const searchTermArray = searchTerm.split(" "); 
+        const searchTermArray = searchTerm.split(',').filter(term => term.trim() !== '');
 
         const filteredUsers = res.data.filter((user: IUser) => {
             return searchTermArray.some(searchTermItem => 
@@ -111,6 +123,7 @@ const Home: React.FC = () => {
 
  const handleCategoryClick = (category: string) => {
     console.log("handleCategoryClick called with category:", category);
+    setDisplaySearch(category);
     setSearch(category);
     setFilteredCategories([]);
     onSubmit(category, true);
@@ -120,9 +133,6 @@ const Home: React.FC = () => {
   useEffect(() => {
     fetchAllCategories();
   }, []);
-
-  //const categoriesString = categories.join(' ');
-
 
   return (
     <main className={styles.main}>
@@ -135,7 +145,7 @@ const Home: React.FC = () => {
       <div className={styles.card}>
       <Form
         isLoading={isLoading}
-        value={search}
+        value={displaySearch}
         onSubmit={onSubmit}
         placeholderText="Qual serviço você deseja pesquisar?"
         showButton
@@ -154,31 +164,30 @@ const Home: React.FC = () => {
             ))}
         </ul>
 
-
         {!!search && (
           <div>
-            <h3 className={styles.results}>
-              Resultados para: <i>{search}</i>
-            </h3>
+              <h3 className={styles.results}>
+                  Resultados para: <i>{search}</i>
+              </h3>
 
-            <ul className={styles.users}>
-              {users.map((u, i) => (
-                <li key={i}>
-                  <p className={styles.name}>{u.userName}</p>
-                  <p className={styles.category}>{u.mainService}</p>
-                  <div className={styles.categoryTags}>
-                    {u.otherServices
-                      .filter(service => service.toLowerCase().includes(search?.toLowerCase() || ''))
-                      .map((s, j) => (
-                        <p key={j}>{s}</p>
-                      ))}
-                  </div>
-                </li>
-              ))}
-            </ul>
+              <ul className={styles.users}>
+                  {users.map((u, i) => (
+                      <li key={i}>
+                          <p className={styles.name}>{u.userName}</p>
+                          <p className={styles.category}>{u.mainService}</p>
+                          <div className={styles.categoryTags}>
+                              {u.otherServices
+                                  .filter(s => search.toLowerCase().split(' ').some(term => s.toLowerCase().includes(term)))
+                                  .filter(s => s.toLowerCase() !== u.mainService.toLowerCase())
+                                  .map((s, j) => (
+                                      <p key={j}>{s}</p>
+                                  ))}
+                          </div>
+                      </li>
+                  ))}
+              </ul>
           </div>
-      )}
-
+        )}
 
         {!!error && (
           <p className={styles.response}>
