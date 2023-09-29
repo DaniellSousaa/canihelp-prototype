@@ -12,10 +12,28 @@ export async function POST(req, res) {
   const client = await clientPromise;
   const db = client.db("canihelp_prototype");
 
-  // Desestruturar o corpo da requisição
   const { userName, mainService, otherServices } = await req.json();
 
   try {
+    await db.collection("categories").createIndex({ Name: 1 }, { unique: true });
+
+    const allServices = [mainService, ...otherServices];
+    console.log('Todas as caterogiras =>', allServices)
+
+    // Verificar quais categorias já existem
+    const existingCategories = await db.collection("categories").find({ Name: { $in: allServices } }).toArray();
+    const existingCategoryNames = existingCategories.map(cat => cat.Name);
+
+    // Determinar quais categorias precisam ser inseridas
+    const categoriesToInsert = allServices.filter(service => !existingCategoryNames.includes(service));
+    console.log('Caterogiras não cadastradas =>', categoriesToInsert)
+
+    // Inserir as categorias não cadastradas
+    if (categoriesToInsert.length > 0) {
+      const documentsToInsert = categoriesToInsert.map(category => ({ Name: category }));
+      await db.collection("categories").insertMany(documentsToInsert);
+    }
+
     // Inserir os dados no MongoDB
     await db.collection("users").insertOne({
       userName,
