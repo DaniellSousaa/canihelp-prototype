@@ -3,6 +3,38 @@ const { MongoClient } = require("mongodb");
 const uri = "mongodb+srv://canihelp:2Soi9MvhQLEHmYrq@cluster0.3uqqr.mongodb.net/canihelp";
 const options = {};
 
+
+const replaceSpecialChars = (value) => {
+  if (!value) return value;
+
+  let str = value?.toString();
+  str = str?.replace(/[ÀÁÃÄÂ]/g, "A");
+  str = str?.replace(/[àáãâä]/g, "a");
+  str = str?.replace(/[ÈÉÊË]/g, "E");
+  str = str?.replace(/[èéêë]/g, "e");
+  str = str?.replace(/[ÌÍÎÏ]/g, "I");
+  str = str?.replace(/[ìíîï]/g, "i");
+  str = str?.replace(/[ÒÓÔÕÖ]/g, "O");
+  str = str?.replace(/[òóôõö]/g, "o");
+  str = str?.replace(/[ÙÚÛŨÜ]/g, "U");
+  str = str?.replace(/[ùúûũü]/g, "u");
+  str = str?.replace(/[Ç]/g, "C");
+  str = str?.replace(/[ç]/g, "c");
+
+  return str;
+};
+
+const createIdFromName = (name) => {
+  if (!name) return name;
+
+  let id = name.toLowerCase(); 
+  id = replaceSpecialChars(id); 
+  id = id.replace(/\s+/g, '_');
+
+  return id;
+};
+
+
 async function saveRegisteredCategories() {
   const client = new MongoClient(uri, options);
 
@@ -30,6 +62,7 @@ async function saveRegisteredCategories() {
       });
 
       const categoriesToInsert = Object.entries(categoryCount).map(([name, count]) => ({
+          _id: createIdFromName(name),
           Name: name,
           Registers: count
       }));
