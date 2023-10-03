@@ -29,6 +29,9 @@ export const getChatGptList = async (prompt: string): Promise<string[]> => {
       const breakLinePos = c.indexOf("\n");
       if (breakLinePos > -1) return c.slice(0, breakLinePos);
 
+      const parenthesisPos = c.indexOf("(");
+      if (parenthesisPos > -1) return c.slice(0, parenthesisPos);
+
       return c;
     });
 

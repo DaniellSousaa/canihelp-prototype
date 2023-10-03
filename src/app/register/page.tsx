@@ -20,14 +20,13 @@ const Register: React.FC = () => {
   const [isFormSubmitted, setIsFormSubmitted] = useState<boolean>(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
-
   const handleMainServiceSubmit = async (prompt: string) => {
     setIsLoading(true);
     try {
       const list = await getChatGptList(prompt);
-      
+
       setMainServiceList(list);
-      //setMainService(""); 
+      //setMainService("");
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
     }
@@ -36,11 +35,13 @@ const Register: React.FC = () => {
 
   const handleOptionClick = (selectedOption: string) => {
     setMainService(selectedOption);
-    const filteredList:any = mainServiceList.filter(item => item !== selectedOption);
+    const filteredList: any = mainServiceList.filter(
+      (item) => item !== selectedOption
+    );
     setOtherServicesList(filteredList);
   };
-  
-  const handleCheckboxChange = (category:any, isChecked:any) => {
+
+  const handleCheckboxChange = (category: any, isChecked: any) => {
     if (isChecked) {
       if (otherServicesTags.length < 5) {
         setOtherServicesTags([...otherServicesTags, category]);
@@ -53,7 +54,6 @@ const Register: React.FC = () => {
       );
     }
   };
-  
 
   const handleSubmit = async () => {
     setIsFormSubmitted(true);
@@ -101,8 +101,6 @@ const Register: React.FC = () => {
     isNextButtonDisabled = !mainService;
   }
 
-  
-
   return (
     <main className={styles.main}>
       <nav className={styles.menu}>
@@ -112,11 +110,11 @@ const Register: React.FC = () => {
 
       <h2 className={styles.title}>Cadastro</h2>
       <div className={styles.card}>
-      <Carousel 
-        handleSubmit={handleSubmit} 
-        isDisabled={isNextButtonDisabled} 
-        onSlideChange={setActiveSlide}
-      >
+        <Carousel
+          handleSubmit={handleSubmit}
+          isDisabled={isNextButtonDisabled}
+          onSlideChange={setActiveSlide}
+        >
           <div>
             <Form
               isLoading={false}
@@ -158,7 +156,9 @@ const Register: React.FC = () => {
                 <Checkbox
                   label={category}
                   checked={otherServicesTags.includes(category)}
-                  onChange={(isChecked) => handleCheckboxChange(category, isChecked)}
+                  onChange={(isChecked) =>
+                    handleCheckboxChange(category, isChecked)
+                  }
                 />
               </li>
             ))}

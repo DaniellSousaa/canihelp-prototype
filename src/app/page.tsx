@@ -23,7 +23,6 @@ const Home: React.FC = () => {
   const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-
   const onSubmit = async (term: string, isCategoryClick?: boolean) => {
     setIsLoading(true);
     setError(null);
@@ -32,103 +31,115 @@ const Home: React.FC = () => {
     let searchTerm;
 
     if (isCategoryClick) {
-        searchTerm = term;
+      searchTerm = term;
     } else {
-        const results = searchMatchCategories(term, categories);
-        const exactMatch = results.find(result => result.Equal);
-        if (exactMatch) {
-            searchTerm = exactMatch.Name;
-        } else if (results.length > 0) {
-            searchTerm = results.slice(0,3).map(r => r.Name).join(" ");
-        } else {
-            searchTerm = term;
-        }
+      const results = searchMatchCategories(term, categories);
+      const exactMatch = results.find((result) => result.Equal);
+      if (exactMatch) {
+        searchTerm = exactMatch.Name;
+      } else if (results.length > 0) {
+        searchTerm = results
+          .slice(0, 3)
+          .map((r) => r.Name)
+          .join(" ");
+      } else {
+        searchTerm = term;
+      }
     }
 
-   
     setSearch(searchTerm);
     setFilteredCategories([]);
     setDisplaySearch(null);
 
     searchTerm = replaceSpecialChars(searchTerm);
 
-    searchTerm = searchTerm.split(' ').reduce((acc, word, index) => {
-      if (word.charAt(0).toUpperCase() === word.charAt(0) && index !== 0) {
+    searchTerm = searchTerm
+      .split(" ")
+      .reduce((acc: string[], word, index) => {
+        if (word.charAt(0).toUpperCase() === word.charAt(0) && index !== 0) {
           acc.push(word);
-      } else if (index === 0) {  
+        } else if (index === 0) {
           acc.push(word);
-      } else {
-          acc[acc.length - 1] = acc[acc.length - 1] + '-' + word;
-      }
-      return acc;
-    }, []).join(',').replace(/^,|,$/g, '');;
-    
+        } else {
+          acc[acc.length - 1] = acc[acc.length - 1] + "-" + word;
+        }
+        return acc;
+      }, [])
+      .join(",")
+      .replace(/^,|,$/g, "");
+
     try {
-        const response = await fetch(`/api/users?term=${searchTerm}`, {
-            method: "GET",
-        });
+      const response = await fetch(`/api/users?term=${searchTerm}`, {
+        method: "GET",
+      });
 
-        const res = await response.json();
-        const searchTermArray = searchTerm.split(',').filter(term => term.trim() !== '');
+      const res = await response.json();
+      const searchTermArray = searchTerm
+        .split(",")
+        .filter((term) => term.trim() !== "");
 
-        const filteredUsers = res.data.filter((user: IUser) => {
-            return searchTermArray.some(searchTermItem => 
-                user.mainService.toLowerCase().includes(searchTermItem.toLowerCase()) ||
-                user.otherServices.some(service => service.toLowerCase().includes(searchTermItem.toLowerCase()))
-            );
-        });
+      const filteredUsers = res.data.filter((user: IUser) => {
+        return searchTermArray.some(
+          (searchTermItem) =>
+            user.mainService
+              .toLowerCase()
+              .includes(searchTermItem.toLowerCase()) ||
+            user.otherServices.some((service) =>
+              service.toLowerCase().includes(searchTermItem.toLowerCase())
+            )
+        );
+      });
 
-        setUsers(filteredUsers);
+      setUsers(filteredUsers);
     } catch (err: any) {
-        setError(err?.message || "Ocorreu um erro");
+      setError(err?.message || "Ocorreu um erro");
     } finally {
-        setIsLoading(false);
-    } 
+      setIsLoading(false);
+    }
   };
 
   async function fetchAllCategories() {
     try {
-      const response = await fetch('/api/categories', {
-        method: 'GET',
+      const response = await fetch("/api/categories", {
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
 
       if (!response.ok) {
-        throw new Error('Erro na resposta da API');
+        throw new Error("Erro na resposta da API");
       }
 
       const data = await response.json();
-      setCategories(data.data); 
+      setCategories(data.data);
       setLoading(false);
     } catch (error) {
-      console.error('Erro ao buscar categorias:', error);
-      setError(error);
+      console.error("Erro ao buscar categorias:", error);
+      setError(typeof error === "string" ? error : JSON.stringify(error));
       setLoading(false);
     }
   }
 
   const handleFilterCategories = (term: string) => {
     if (term.length >= 2) {
-        const results = searchMatchCategories(term, categories);
-        const categoryNames = results.map(result => result.Name).slice(0, 5);
-        setFilteredCategories(categoryNames);
+      const results = searchMatchCategories(term, categories);
+      const categoryNames = results.map((result) => result.Name).slice(0, 5);
+      setFilteredCategories(categoryNames);
     } else {
-        setFilteredCategories([]);
-        setUsers([]);
-        setSearch(null)
+      setFilteredCategories([]);
+      setUsers([]);
+      setSearch(null);
     }
   };
 
- const handleCategoryClick = (category: string) => {
+  const handleCategoryClick = (category: string) => {
     console.log("handleCategoryClick called with category:", category);
     setDisplaySearch(category);
     setSearch(category);
     setFilteredCategories([]);
     onSubmit(category, true);
   };
-
 
   useEffect(() => {
     fetchAllCategories();
@@ -143,49 +154,56 @@ const Home: React.FC = () => {
 
       <h2 className={styles.title}>Início</h2>
       <div className={styles.card}>
-      <Form
-        isLoading={isLoading}
-        value={displaySearch}
-        onSubmit={onSubmit}
-        placeholderText="Qual serviço você deseja pesquisar?"
-        showButton
-        onChange={handleFilterCategories}
-      />
+        <Form
+          isLoading={isLoading}
+          value={String(displaySearch ? displaySearch : "")}
+          onSubmit={onSubmit}
+          placeholderText="Qual serviço você deseja pesquisar?"
+          showButton
+          onChange={handleFilterCategories}
+        />
 
         <ul className={styles.list}>
-            {filteredCategories.map((category, i) => (
-                <li
-                    className={styles.listItem}
-                    key={i}
-                    onClick={() => handleCategoryClick(category)}
-                >
-                    {category}
-                </li>
-            ))}
+          {filteredCategories.map((category, i) => (
+            <li
+              className={styles.listItem}
+              key={i}
+              onClick={() => handleCategoryClick(category)}
+            >
+              {category}
+            </li>
+          ))}
         </ul>
 
         {!!search && (
           <div>
-              <h3 className={styles.results}>
-                  Resultados para: <i>{search}</i>
-              </h3>
+            <h3 className={styles.results}>
+              Resultados para: <i>{search}</i>
+            </h3>
 
-              <ul className={styles.users}>
-                  {users.map((u, i) => (
-                      <li key={i}>
-                          <p className={styles.name}>{u.userName}</p>
-                          <p className={styles.category}>{u.mainService}</p>
-                          <div className={styles.categoryTags}>
-                              {u.otherServices
-                                  .filter(s => search.toLowerCase().split(' ').some(term => s.toLowerCase().includes(term)))
-                                  .filter(s => s.toLowerCase() !== u.mainService.toLowerCase())
-                                  .map((s, j) => (
-                                      <p key={j}>{s}</p>
-                                  ))}
-                          </div>
-                      </li>
-                  ))}
-              </ul>
+            <ul className={styles.users}>
+              {users.map((u, i) => (
+                <li key={i}>
+                  <p className={styles.name}>{u.userName}</p>
+                  <p className={styles.category}>{u.mainService}</p>
+                  <div className={styles.categoryTags}>
+                    {u.otherServices
+                      .filter((s) =>
+                        search
+                          .toLowerCase()
+                          .split(" ")
+                          .some((term) => s.toLowerCase().includes(term))
+                      )
+                      .filter(
+                        (s) => s.toLowerCase() !== u.mainService.toLowerCase()
+                      )
+                      .map((s, j) => (
+                        <p key={j}>{s}</p>
+                      ))}
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
