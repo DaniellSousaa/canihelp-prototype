@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import {createIdFromName } from "@/utils/search";
 
 import clientPromise from "../../lib/mongodb";
 
@@ -29,8 +30,19 @@ export async function POST(req, res) {
 
     // Inserir as categorias não cadastradas
     if (categoriesToInsert.length > 0) {
-      const documentsToInsert = categoriesToInsert.map(category => ({ Name: category }));
+      const documentsToInsert = categoriesToInsert.map(category => ({
+        _id: createIdFromName(category), 
+        Name: category,
+        Registers: 1 
+      }));
       await db.collection("categories").insertMany(documentsToInsert);
+    }
+
+    for (const existingCategory of existingCategories) {
+      await db.collection("categories").updateOne(
+        { _id: existingCategory._id },
+        { $inc: { Registers: 1 } }
+      );
     }
 
     // Inserir os dados no MongoDB
