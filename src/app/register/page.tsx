@@ -1,17 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import styles from "../page.module.css";
 import { Form } from "../components/Form";
 import { getChatGptList } from "@/utils/api";
 import Carousel from "../components/Carousel";
 import Checkbox from "../components/Checkbox";
+import { searchMatchCategories, createIdFromName } from "@/utils/search";
+
 
 const Register: React.FC = () => {
   const [userName, setUserName] = useState<string>("");
   const [mainService, setMainService] = useState<string>("");
   const [otherServicesTags, setOtherServicesTags] = useState<string[]>([]);
+
+  const [categories, setCategories] = useState<string[]>([])
 
   const [mainServiceList, setMainServiceList] = useState<string[]>([]);
   const [otherServicesList, setOtherServicesList] = useState<string[]>([]);
@@ -20,12 +24,48 @@ const Register: React.FC = () => {
   const [isFormSubmitted, setIsFormSubmitted] = useState<boolean>(false);
   const [activeSlide, setActiveSlide] = useState(0);
 
+ 
+
+  async function getCategories(){
+    try {
+      const response = await fetch('/api/categories',{
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      if(!response.ok){
+        throw new Error(`Api erro: ${response.statusText}`)
+      }
+      const data = await response.json();
+
+      setCategories(data)
+      
+    } catch (error) {
+      console.log('erro ao bucas categorias', error)
+    }
+  }
+
+
   const handleMainServiceSubmit = async (prompt: string) => {
     setIsLoading(true);
     try {
       const list = await getChatGptList(prompt);
+      
+      let listCategoriesAndReplyChatGpt = [...list]
+      console.log('apenas chatGpt', listCategoriesAndReplyChatGpt)
 
-      setMainServiceList(list);
+      if(categories.length> 0){
+        listCategoriesAndReplyChatGpt= [...new Set([...list, ...categories])]
+      }
+
+      console.log('chatGpt e categorias', listCategoriesAndReplyChatGpt)
+
+      const matchedCategories = searchMatchCategories(prompt, listCategoriesAndReplyChatGpt);
+      const highMatchCategories = matchedCategories.filter(item => item.Percent >= 80);
+      const filteredList = highMatchCategories.map(item => item.Name)
+
+      setMainServiceList(filteredList);
       //setMainService("");
     } catch (error) {
       console.error("Erro ao buscar resposta:", error);
@@ -75,12 +115,27 @@ const Register: React.FC = () => {
         otherServices: otherServicesTags,
       };
 
+
+      const newCategories = [mainService, ...otherServicesList].filter(category => Array.isArray(categories) && !categories.includes(category))
+
+      const categoryCount: {[key: string]: number}= {}
+      
+      newCategories.forEach((category) =>{
+        categoryCount[category] = (categoryCount[category] || 0) + 1;
+      })
+
+      const categoriesToInsert = Object.entries(categoryCount).map(([name, count]) => ({
+        _id: createIdFromName(name),
+        Name: name,
+        Registers: count
+    }));
+
       const response = await fetch("/api/save-user", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(collectedData),
+        body: JSON.stringify({...collectedData, newCategories: categoriesToInsert}),
       });
 
       if (response.ok) {
@@ -100,6 +155,10 @@ const Register: React.FC = () => {
   } else if (activeSlide === 1) {
     isNextButtonDisabled = !mainService;
   }
+
+  useEffect(()=> {
+    getCategories()
+  }, [])
 
   return (
     <main className={styles.main}>

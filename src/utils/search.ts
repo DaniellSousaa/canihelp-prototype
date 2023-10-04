@@ -18,6 +18,17 @@ export const replaceSpecialChars = (value: string) => {
   return str;
 };
 
+
+export const createIdFromName = (name: string) => {
+  if (!name) return name;
+
+  let id = name.toLowerCase(); 
+  id = replaceSpecialChars(id); 
+  id = id.replace(/\s+/g, '_');
+
+  return id;
+};
+
 export const genderWords = [{ name: "professor", variant: "professora" }];
 
 export const strToLettersArr = (str: string) => {
