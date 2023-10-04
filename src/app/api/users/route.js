@@ -1,46 +1,68 @@
 import { NextResponse } from "next/server";
-
 import clientPromise from "../../lib/mongodb";
 
-export async function GET(req, res) {
+const splitTerms = (input) => {
+  return input.split(" ")
+    .reduce((acc, word) => {
+      if (word.charAt(0).toUpperCase() === word.charAt(0) && acc.length > 0) {
+        acc.push(word);
+      } else if (acc.length > 0) {
+        acc[acc.length - 1] = `${acc[acc.length - 1]} ${word}`;
+      } else {
+        acc.push(word);
+      }
+      return acc;
+    }, []);
+};
+
+export async function POST(req, res) {
   // Verificar o método da requisição
-  if (req.method !== "GET") {
+  if (req.method !== "POST") {
     return res.status(405).json({ message: "Método não permitido" });
   }
 
-  //Teste
-  const termFromURL = req.url.split("users?")[1].split("=")[1];
+  // Extrair termo do corpo da requisição
+  const { term } = await req.json();
 
-  console.log(termFromURL);
-
-  const term = termFromURL.split(",").map((term) => term.replace(/-/g, " "));
-
-  console.log(term);
-
-  if (!term) {
-    throw { message: "Termo obrigatório" };
+  if (!term || (typeof term !== 'string' && !Array.isArray(term))) {
+    throw { message: "Termo obrigatório e deve ser um array de strings" };
   }
 
-  // Conectar ao MongoDB
+  //console.log(term)
+  const searchTerms = typeof term === 'string' ? splitTerms(term) : term;
+
+  console.log(searchTerms)
+
+  // Conectar ao MongoDB.
   const client = await clientPromise;
   const db = client.db("canihelp_prototype");
 
   try {
     // Inserir os dados no MongoDB
     const users = await db
+    .collection("users")
+    .find({
+      $or: [
+        { mainService: { $in: searchTerms } },
+        { otherServices: { $in: searchTerms } }
+      ]
+    })
+    .toArray();
+
+    /*const users = await db
       .collection("users")
       .aggregate([
         {
           $search: {
             index: "users_search",
             text: {
-              query: term,
+              query: searchTerms,
               path: ["mainService", "otherServices"],
             },
           },
         },
       ])
-      .toArray();
+    .toArray();*/
 
     return NextResponse.json({ data: users }, { status: 201 });
   } catch (error) {
