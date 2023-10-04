@@ -27,9 +27,9 @@ const Home: React.FC = () => {
     setIsLoading(true);
     setError(null);
     setDisplaySearch(term);
-
+  
     let searchTerm;
-
+  
     if (isCategoryClick) {
       searchTerm = term;
     } else {
@@ -39,20 +39,15 @@ const Home: React.FC = () => {
         searchTerm = exactMatch.Name;
       } else if (results.length > 0) {
         searchTerm = results
-          .slice(0, 3)
+          .slice(0, 5)
           .map((r) => r.Name)
           .join(" ");
       } else {
         searchTerm = term;
       }
     }
-
-    setSearch(searchTerm);
-    setFilteredCategories([]);
-    setDisplaySearch(null);
-
-    searchTerm = replaceSpecialChars(searchTerm);
-
+  
+    // Aplicando a lógica de formatação
     searchTerm = searchTerm
       .split(" ")
       .reduce((acc: string[], word, index) => {
@@ -61,23 +56,35 @@ const Home: React.FC = () => {
         } else if (index === 0) {
           acc.push(word);
         } else {
-          acc[acc.length - 1] = acc[acc.length - 1] + "-" + word;
+          acc[acc.length - 1] = acc[acc.length - 1] + " " + word;
         }
         return acc;
       }, [])
-      .join(",")
-      .replace(/^,|,$/g, "");
-
+      .join(" ")
+      .replace(/^ | $/g, "");
+  
+    setSearch(searchTerm);
+    setFilteredCategories([]);
+    setDisplaySearch(null);
+  
     try {
-      const response = await fetch(`/api/users?term=${searchTerm}`, {
-        method: "GET",
+      // Usando POST e enviando o termo de pesquisa no corpo da requisição
+      const response = await fetch(`/api/users`, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ term: searchTerm })
       });
-
+  
       const res = await response.json();
-      const searchTermArray = searchTerm
-        .split(",")
-        .filter((term) => term.trim() !== "");
-
+  
+      if (!res.data) {
+        throw new Error(res.message || "Resposta inválida do servidor");
+      }
+  
+      const searchTermArray = searchTerm.split(" ");
+  
       const filteredUsers = res.data.filter((user: IUser) => {
         return searchTermArray.some(
           (searchTermItem) =>
@@ -89,7 +96,7 @@ const Home: React.FC = () => {
             )
         );
       });
-
+  
       setUsers(filteredUsers);
     } catch (err: any) {
       setError(err?.message || "Ocorreu um erro");
@@ -97,7 +104,8 @@ const Home: React.FC = () => {
       setIsLoading(false);
     }
   };
-
+  
+  
   async function fetchAllCategories() {
     try {
       const response = await fetch("/api/categories", {
