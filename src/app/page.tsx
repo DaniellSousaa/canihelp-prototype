@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 
 import styles from "./page.module.css";
 import { Form } from "./components/Form";
-import { replaceSpecialChars, searchMatchCategories } from "@/utils/search";
+import { searchMatchCategories } from "@/utils/search";
 
 interface IUser {
   userName: string;
@@ -63,7 +63,7 @@ const Home: React.FC = () => {
     setDisplaySearch(category);
     setSearch(category);
     setFilteredCategories([]);
-    fetchAllCategories();
+    //fetchAllCategories();
     onSubmit(category, true);
   };
 
@@ -143,7 +143,7 @@ const Home: React.FC = () => {
   
       setUsers(filteredUsers);
       console.log('Segunda chamada')
-      fetchAllCategories();
+      //fetchAllCategories();
     } catch (err: any) {
       setError(err?.message || "Ocorreu um erro");
     } finally {
@@ -152,9 +152,13 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log('Primeira chamada')
-    fetchAllCategories();
-  }, [users]);
+    const fetchCategoriesInterval = setInterval(() => {
+      fetchAllCategories();
+    }, 5000); 
+    
+    return () => clearInterval(fetchCategoriesInterval); 
+  }, []);
+  
 
   return (
     <main className={styles.main}>
