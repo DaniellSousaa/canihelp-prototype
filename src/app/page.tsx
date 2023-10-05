@@ -195,33 +195,44 @@ const Home: React.FC = () => {
             <h3 className={styles.results}>
               Resultados para: <i>{search}</i>
             </h3>
-
             <ul className={styles.users}>
-              {users.map((u, i) => (
-                <li key={i}>
-                  <p className={styles.name}>{u.userName}</p>
-                  <p className={styles.category}>{u.mainService}</p>
-                  <div className={styles.categoryTags}>
-                    {u.otherServices
-                      .filter((s) =>
-                        search
-                          .toLowerCase()
-                          .split(" ")
-                          .some((term) => s.toLowerCase().includes(term))
-                      )
-                      .filter(
-                        (s) => s.toLowerCase() !== u.mainService.toLowerCase()
-                      )
-                      .map((s, j) => (
-                        <p key={j}>{s}</p>
-                      ))}
-                  </div>
-                </li>
-              ))}
+              {users
+                .sort((a, b) => {
+                  const aMatches = a.mainService.toLowerCase().includes(search.toLowerCase());
+                  const bMatches = b.mainService.toLowerCase().includes(search.toLowerCase());
+
+                  if (aMatches && !bMatches) return -1;
+                  if (!aMatches && bMatches) return 1;
+
+                  return a.mainService.toLowerCase().localeCompare(b.mainService.toLowerCase());
+                })
+                .map((u, i) => (
+                  <li key={i}>
+                    <p className={styles.name}>{u.userName}</p>
+                    <p className={styles.category}>{u.mainService}</p>
+                    <div className={styles.categoryTags}>
+                      {u.otherServices
+                        .filter((s) =>
+                          search
+                            .toLowerCase()
+                            .split(" ")
+                            .some((term) => s.toLowerCase().includes(term))
+                        )
+                        .filter((s) => s.toLowerCase() !== u.mainService.toLowerCase())
+                        .sort((a, b) => 
+                          a.toLowerCase().indexOf(search.toLowerCase()) - 
+                          b.toLowerCase().indexOf(search.toLowerCase())
+                        )
+                        .map((s, j) => (
+                          <p key={j}>{s}</p>
+                        ))}
+                    </div>
+                  </li>
+                ))}
             </ul>
           </div>
         )}
-
+        
         {!!error && (
           <p className={styles.response}>
             <strong>{error}</strong>
