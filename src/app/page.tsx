@@ -22,6 +22,50 @@ const Home: React.FC = () => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  async function fetchAllCategories() {
+    try {
+      const response = await fetch("/api/categories", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erro na resposta da API");
+      }
+
+      const data = await response.json();
+      setCategories(data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Erro ao buscar categorias:", error);
+      setError(typeof error === "string" ? error : JSON.stringify(error));
+      setLoading(false);
+    }
+  }
+
+  const handleFilterCategories = (term: string) => {
+    if (term.length >= 2) {
+      const results = searchMatchCategories(term, categories);
+      const categoryNames = results.map((result) => result.Name).slice(0, 5);
+      setFilteredCategories(categoryNames);
+    } else {
+      setFilteredCategories([]);
+      setUsers([]);
+      setSearch(null);
+    }
+  };
+
+  const handleCategoryClick = (category: string) => {
+    console.log("handleCategoryClick called with category:", category);
+    setDisplaySearch(category);
+    setSearch(category);
+    setFilteredCategories([]);
+    fetchAllCategories();
+    onSubmit(category, true);
+  };
 
   const onSubmit = async (term: string, isCategoryClick?: boolean) => {
     setIsLoading(true);
@@ -98,60 +142,19 @@ const Home: React.FC = () => {
       });
   
       setUsers(filteredUsers);
+      console.log('Segunda chamada')
+      fetchAllCategories();
     } catch (err: any) {
       setError(err?.message || "Ocorreu um erro");
     } finally {
       setIsLoading(false);
     }
   };
-  
-  
-  async function fetchAllCategories() {
-    try {
-      const response = await fetch("/api/categories", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Erro na resposta da API");
-      }
-
-      const data = await response.json();
-      setCategories(data.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Erro ao buscar categorias:", error);
-      setError(typeof error === "string" ? error : JSON.stringify(error));
-      setLoading(false);
-    }
-  }
-
-  const handleFilterCategories = (term: string) => {
-    if (term.length >= 2) {
-      const results = searchMatchCategories(term, categories);
-      const categoryNames = results.map((result) => result.Name).slice(0, 5);
-      setFilteredCategories(categoryNames);
-    } else {
-      setFilteredCategories([]);
-      setUsers([]);
-      setSearch(null);
-    }
-  };
-
-  const handleCategoryClick = (category: string) => {
-    console.log("handleCategoryClick called with category:", category);
-    setDisplaySearch(category);
-    setSearch(category);
-    setFilteredCategories([]);
-    onSubmit(category, true);
-  };
 
   useEffect(() => {
+    console.log('Primeira chamada')
     fetchAllCategories();
-  }, []);
+  }, [users]);
 
   return (
     <main className={styles.main}>
