@@ -16,7 +16,7 @@ export async function GET(req, res) {
     const collection = await db
       .collection("categories")
       .find()
-      .toArray();
+      .toArray()
       const names = collection.map(item => item.Name);
     return NextResponse.json({ data: names }, { status: 201 });
   } catch (error) {
