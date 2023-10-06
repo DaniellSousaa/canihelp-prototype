@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import { Form } from "./components/Form";
 import { searchMatchCategories } from "@/utils/search";
+import axios from "axios";
 
 interface IUser {
   userName: string;
@@ -25,21 +26,13 @@ const Home: React.FC = () => {
   
   async function fetchAllCategories() {
     try {
-      const response = await fetch("/api/categories", {
-        method: "GET",
+      const response = await axios.get("/api/categories", {
         headers: {
           "Content-Type": "application/json",
         },
-        cache: 'no-store',
-        next: {revalidate: 3600}
-      },);
+      });
 
-      if (!response.ok) {
-        throw new Error("Erro na resposta da API");
-      }
-
-      const data = await response.json();
-      setCategories(data.data);
+      setCategories(response.data.data);
       setLoading(false);
     } catch (error) {
       console.error("Erro ao buscar categorias:", error);
@@ -115,25 +108,19 @@ const Home: React.FC = () => {
   
     try {
       // Usando POST e enviando o termo de pesquisa no corpo da requisição
-      const response = await fetch(`/api/users`, {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ term: searchTerm }),
-        cache: 'no-store',
-        next: {revalidate: 3600}
+      const response = await axios.post(`/api/users`, {
+        term: searchTerm,
       });
   
-      const res = await response.json();
+
   
-      if (!res.data) {
-        throw new Error(res.message || "Resposta inválida do servidor");
+      if (!response.data.data) {
+        throw new Error(response.data.message || "Resposta inválida do servidor");
       }
   
       const searchTermArray = searchTerm.split(" ");
   
-      const filteredUsers = res.data.filter((user: IUser) => {
+      const filteredUsers = response.data.data.filter((user: IUser) => {
         return searchTermArray.some(
           (searchTermItem) =>
             user.mainService
@@ -146,7 +133,7 @@ const Home: React.FC = () => {
       });
   
       setUsers(filteredUsers);
-      //console.log('Segunda chamada')
+      console.log('Segunda chamada')
       //fetchAllCategories();
     } catch (err: any) {
       setError(err?.message || "Ocorreu um erro");

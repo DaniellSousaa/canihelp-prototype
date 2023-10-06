@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+
 import clientPromise from "../../lib/mongodb";
 
 export async function GET(req, res) {
@@ -22,7 +23,7 @@ export async function GET(req, res) {
   } catch (error) {
     return NextResponse.json(
       { message: "Erro ao buscar gaterorias", error: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
