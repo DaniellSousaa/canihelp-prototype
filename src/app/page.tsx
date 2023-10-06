@@ -30,7 +30,9 @@ const Home: React.FC = () => {
         headers: {
           "Content-Type": "application/json",
         },
-      });
+        cache: 'no-store',
+        next: {revalidate: 3600}
+      },);
 
       if (!response.ok) {
         throw new Error("Erro na resposta da API");
@@ -118,7 +120,9 @@ const Home: React.FC = () => {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ term: searchTerm })
+        body: JSON.stringify({ term: searchTerm }),
+        cache: 'no-store',
+        next: {revalidate: 3600}
       });
   
       const res = await response.json();
@@ -142,7 +146,7 @@ const Home: React.FC = () => {
       });
   
       setUsers(filteredUsers);
-      console.log('Segunda chamada')
+      //console.log('Segunda chamada')
       //fetchAllCategories();
     } catch (err: any) {
       setError(err?.message || "Ocorreu um erro");
@@ -152,11 +156,7 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchCategoriesInterval = setInterval(() => {
-      fetchAllCategories();
-    }, 5000); 
-    
-    return () => clearInterval(fetchCategoriesInterval); 
+    fetchAllCategories();
   }, []);
   
 
