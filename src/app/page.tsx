@@ -23,10 +23,12 @@ const Home: React.FC = () => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+
+  console.log(categories)
   
   async function fetchAllCategories() {
     try {
-      const response = await axios.get("/api/categories", {
+      const response = await axios.get('https://api-test-indol.vercel.app/api/categories', {
         headers: {
           "Content-Type": "application/json",
         },
